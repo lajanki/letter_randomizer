@@ -72,7 +72,8 @@ OAUTH_SECRET = KEYS["OAUTH_SECRET"]
 twitter = twython.Twython(API_KEY, API_SECRET, OAUTH_TOKEN, OAUTH_SECRET)
 CHECKS_PER_LETTER = 4  # max number of times to ask for user input before processing current template
 CRON_DELTA = 6  # hours between calls to this script in Cron: 4 calls 6 hours apart = 1 processed letter in every 24 hours
-PATH_TO_SERVER = "http://lajanki.mbnet.fi/letters/"
+TWITTER_ACCOUNT = "@vocal_applicant"  # the bot's Twitter account
+PATH_TO_SERVER = "http://lajanki.mbnet.fi/letters/" # server to where the bot should link to
 
 
 
@@ -80,7 +81,7 @@ PATH_TO_SERVER = "http://lajanki.mbnet.fi/letters/"
 # Bot state setting functions =
 #==============================
 
-def parse_twitter(parent_id, query="@vocal_applicant", first_only=True):
+def parse_twitter(parent_id, query=TWITTER_ACCOUNT, first_only=True):
   # Queries Twitter for tweets posted after parent_id and
   # parses them for input.pkl.
   # The query parameters are used to find tweets send to the bot (tweets containing "@vocal_applicant")
@@ -314,7 +315,7 @@ def main(args):
       # read the last words from Twitter and if necessary, fill missing from database
       print "Final pass"
       #letters.parse_input()
-      parse_twitter(bot_data["latest_tweet"], "@vocal_applicant")
+      parse_twitter(bot_data["latest_tweet"], TWITTER_ACCOUNT)
       letters.fetch_words()
 
       print "Processing current template. See the generated .txt file for results."
@@ -342,7 +343,7 @@ def main(args):
     else:
       # read input since last call and check if more still needed
       print "Need more words"
-      parse_twitter(bot_data["latest_tweet"], "@vocal_applicant")
+      parse_twitter(bot_data["latest_tweet"], TWITTER_ACCOUNT)
       status = get_template_status()
 
       # check if these were the final words needed
