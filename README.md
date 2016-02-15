@@ -80,8 +80,10 @@ a title for each filename
 
 
 
+#### Changelog
+15.2.2016 Initial release
+
+
 ___
 Written on Python 2.7.8
-
-Lauri Ajanki 15.2.2016
 
