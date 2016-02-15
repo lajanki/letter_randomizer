@@ -73,7 +73,7 @@ Addtionally:
   * the templates folder contains a collection pre-filled letters and summary json file defining
 a title for each filename
   * quotes.db is a database containing a dictionary table which contains words and an nltk tag
-    telling which word class each word belong, see my quote_randomizer for more detailed description.
+    telling which word class each word belong, see my quote_randomizer for more detailed description https://github.com/lajanki/quote_randomizer
   * keys.json is an empty storage space for Twitters access tokens, and
   * bot.sh is a Linux launcher script for running bot.py and for sending any generated output to a web server.
 
