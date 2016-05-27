@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*- 
 
 ###############################################################################
@@ -6,7 +5,7 @@
 # A Twitter bot using the separate letters module to ask for user input       #
 # on Twitter to randomize a letter template.                                  #
 #                                                                             #
-# This script is set up to make 4 runs per template. On run 1-3 it checks     #
+# This script is set up to make 4 runs per template. On runs 1-3 it checks    #
 # if new input has been tweeted since last run. On 4th run it will read       #
 # all missing input from a database (if any), process the current template    #
 # and tweet a link to it.                                                     #
@@ -26,17 +25,24 @@
 #                                                                             #
 # File structure:                                                             #
 # * This script one Pickle encoded file for internal bookkeeping:             #
-#   1 bot_data.pkl - current state of the bot, a dict of:                     #
+#    bot_data.pkl - current state of the bot, a dict of:                      #
 #    * run_order (list): list of files to process                             #
-#    * run (int): which pass of 4 is the bot currently                        #
-#      (passes 1,2,3 = ask for input, 4 = check final input and tweet result) #
-#    * current_title (string): current letter title                           #
+#    * run (int): the run number the bot is currently.                        #
+#        (runs 1,2,3 = ask for input,                                         #
+#	      4 = check final input and tweet result) 							  #
+#    * current_title (string): the title of the letter currently being 		  #
+#	   processed                        									  #
 #    * latest_tweet (string): id of the latest tweet                          #
-#    * processed (bool): whether the current template is already              #
+#    * processed (bool): whether the current template is already processed    #
 # * Additionally Twitter access tokens are read from keys.json. Note that     #
 #   this file is empty and the actual tokens needs to inserted before         #
 #   the script will run!                                                      # 
 #                                                                             #
+# Change log  															      #
+# 27.5.2016 																  #
+#	-File I/O changed to conform to the changes in letters.py                 #
+# 13.2.2016 																  #
+#	-Initial release 														  #
 #                                                                             #
 # Lauri Ajanki                                                                #
 # 14.2.2016                                                                   #
@@ -56,12 +62,13 @@ import sys
 import letters
 
 
+
 #==================================================================================
 # Global consants =
 #==================
 
 # read required Twitter keys from file
-with open("./keys.json") as f:
+with open("keys.json") as f:
   KEYS = json.load(f)
 
 API_KEY = KEYS["API_KEY"]
@@ -70,46 +77,40 @@ OAUTH_TOKEN = KEYS["OAUTH_TOKEN"]
 OAUTH_SECRET = KEYS["OAUTH_SECRET"]
 
 twitter = twython.Twython(API_KEY, API_SECRET, OAUTH_TOKEN, OAUTH_SECRET)
-CHECKS_PER_LETTER = 4  # max number of times to ask for user input before processing current template
-CRON_DELTA = 6  # hours between calls to this script in Cron: 4 calls 6 hours apart = 1 processed letter in every 24 hours
-TWITTER_ACCOUNT = "@vocal_applicant"  # the bot's Twitter account
-PATH_TO_SERVER = "http://lajanki.mbnet.fi/letters/" # server to where the bot should link to
+CHECKS_PER_LETTER = 4  # max number of times to ask for user input before processing current letter
+CRON_DELTA = 6  # hours between calls to this script in Cron
+PATH_TO_SERVER = "http://lajanki.mbnet.fi/active.php"  # link to the server where processed file will be sent
 
 
 
 #==================================================================================
 # Bot state setting functions =
 #==============================
+def parse_twitter(parent_id, query="@vocal_applicant", first_only=True):
+  """Reads Twitter for tweets posted after parent_id and
+  parses them for input to current template.
+  Args:
+    parent_id (str): a tweet id string
+    query (str): a Twitter search query to be passed to twython object
+    first_only (boolean): whether only the first valid word of a tweet should be parsed
+  """
+  with open("template.pkl", "rb") as template_file:
+    template_data = pickle.load(template_file)
+    change_frame = template_data["change_frame"]
+    template = template_data["template"]
 
-def parse_twitter(parent_id, query=TWITTER_ACCOUNT, first_only=True):
-  # Queries Twitter for tweets posted after parent_id and
-  # parses them for input.pkl.
-  # The query parameters are used to find tweets send to the bot (tweets containing "@vocal_applicant")
-  # sent after the bot's latest update. 
-  # Arg:
-  #   parent_id (str): a tweet id string to pass for Twython's search function's since_id parameter
-  #   query (str): the search query to pass to Twython
-  #   first_only (boolean): whether only the first word of a tweet should be parsed for user input
-  # Return:
-  #  None (implicit)
-
-  with open("./index_data.pkl", "rb") as index_file:
-    index_data = pickle.load(index_file)      # metadata of words still needed from user input. A list of tuples: ((word, tag), index)
-
-  with open("./input.pkl", "rb") as input_file:   # words already read. A dict: { words: (word, idx), newlines}
-    read = pickle.load(input_file)
-    words = read["words"]
-
-  results = twitter.cursor(twitter.search, q=query, since_id=parent_id)
+  results = twitter.cursor(twitter.search, q=query, since_id=parent_id, lang="en")
   try:
-    for next in results:
-      user = next["user"]["screen_name"]
+    for res in results:
+      user = res["user"]["screen_name"]
       # skip retweets and self tweets
-      if "retweeted_status" in next or user == "vocal_applicant":
+      if "retweeted_status" in res or user == "vocal_applicant":
         continue
 
-      text = next["text"]
+      text = res["text"]
       tokens = nltk.word_tokenize(text)
+      print "tweet:\n", text
+      print user
 
       # strip unwanted tokens
       stripped = []
@@ -119,63 +120,58 @@ def parse_twitter(parent_id, query=TWITTER_ACCOUNT, first_only=True):
           if first_only:
             break
 
-        stripped.append(token)
-
+      print "stripped\n", stripped
       tagged = nltk.pos_tag(stripped)
 
       # check if tagged words match those needed to fill blanks
       for word, tag in tagged:
-        valid = [token for token in index_data if token[0][1] == tag]
+        # get change_frame tuples with matching tag
+        valid = [token for token in change_frame if token[2] == tag]
 
+        # use the topmost item in valid as directive for the change
         if valid:
-          new = (word, valid[0][1]) # (word, idx)
-          old = valid[0]  # ((word, tag), idx) 
+          data = valid.pop()
+          new = (word, (data[0], data[1])) # (word, (paragraph index, word index))
+          old = template[data[0]][0][data[1]]
 
-          # remove old from index_data and add new to words
-          index_data.remove(old)
-          words.append(new)
-
-          print "Adding:", new, "as", old
+          # add new word to template and remove old data from change_frame
+          print "Adding:", new[0], "as", old
+          template[data[0]][0][data[1]] = new[0]
+          change_frame.remove(data)
 
   # read as many tweets as possible and move on 
   except twython.TwythonRateLimitError as e:
     print e
   
-  # write index_data and user input back to file
-  with open("./index_data.pkl", "wb") as index_file:
-    pickle.dump(index_data, index_file, 2)
 
-  read["words"] = words
-  with open("./input.pkl", "wb") as input_file:
-    pickle.dump(read, input_file, 2)
+  template_data["template"] = template
+  template_data["change_frame"] = change_frame
+  with open("template.pkl", "wb") as template_file:
+    pickle.dump(template_data, template_file, 2)
 
 
 def init_bot():
-  # Read contents of ./templates to create a run order, store it to file
-  # and use the letters module to initialize the next template.
-  # Return:
-  #  None (implicit)
-
-  files = glob.glob("./templates/*.txt")
+  """Read contents of ./templates to create a run order, initialize bot status as dict
+  and pass it to init_template() to initialize the next template.
+  """
+  files = glob.glob("templates/*.txt")
   random.shuffle(files)
   bot_data = {"run_order": files, "run": 1, "current_title": None, "latest_tweet": None, "processed": False}
   init_template(bot_data)
 
 
 def init_template(bot_data):
-  # Select the next template from file to be processed or call init_bot()
-  # to re-initialize the whole bot.
-  # Arg:
-  #   bot_data (dict): the bot's current status
-  # Return:
-  #  None (implicit)
-
+  """Select the next template from file to be processed or call init_bot()
+  to re-initialize the whole bot.
+  Arg:
+    bot_data (dict): the bot's current status
+  """
   try:
     run_order = bot_data["run_order"]
     bot_data["processed"] = False
-    next = run_order.pop()
-    print "Next template:", next
-    title = letters.parse_letter(next, 0.6)
+    next_ = run_order.pop()
+    print "Next template:", next_
+    title = letters.parse_letter(next_, 0.6)
 
     # tweet title and status of the next template
     msg = "Tweet me single words to include in a letter.\nCurrently writing " + title + "."
@@ -184,7 +180,7 @@ def init_template(bot_data):
     tweet(msg)
     print "tweet:", msg
 
-    # status in another tweet
+    # post status in another tweet
     status = get_template_status()
     tweet_id = tweet(status)
     print "tweet:", status
@@ -199,7 +195,6 @@ def init_template(bot_data):
 
   # nothing to pop => re-initialize the bot
   except IndexError:
-    print "No more templates to proces: re-initializing..."
     init_bot()
     sys.exit()
 
@@ -207,24 +202,25 @@ def init_template(bot_data):
 #==================================================================================
 # Helper functions =
 #===================
-
 def get_template_status():
-  # Check how many words are still needed to fill the current template.
-  # Return:
-  #   a string describing how many adjectives, nouns, verbs and adverbs are needed
-
-  with open("./index_data.pkl", "rb") as index_file:
-    index_data = pickle.load(index_file)  # ((word, tag), index)
+  """Check how many words are still needed to fill the current template.
+  Return:
+    a string describing how many adjectives, nouns, verbs and adverbs are needed
+  """
+  with open("template.pkl", "rb") as template_file:
+    template_data = pickle.load(template_file)
+    change_frame = template_data["change_frame"]
+    template = template_data["template"]
 
   # no more words needed, return an empty string
-  if not index_data:
+  if not change_frame:
     return ""
 
   # create a dict to map tags to number of matching words needed
-  tags = [token[0][1] for token in index_data]
+  tags = [token[2] for token in change_frame]
   d = dict.fromkeys(letters.CLASSES, 0)
   for tag in tags:
-    d[tag] = len([token[0][0] for token in index_data if token[0][1] == tag])
+    d[tag] = tags.count(tag)
 
   # new dict for printing grouped data
   d_h = dict()
@@ -243,13 +239,13 @@ def get_template_status():
 
 
 def tweet(msg):
-  # A wrapper around Twython's update_status():
-  # tweets msg and returns its id string.
-  # Arg:
-  #   msg (string): the message to tweet
-  # Return
-  #   the id of the tweet
-
+  """A wrapper around Twython's update_status():
+  tweets msg and return its id string.
+  Arg:
+    msg (string): the message to tweet
+  Return
+    tweet id
+  """
   tweet = twitter.update_status(status=msg)
   tweet_id = tweet["id_str"]
   return tweet_id
@@ -259,52 +255,40 @@ def tweet(msg):
 # Main =
 #=======
 
+# Depending on the bot's current state (ie. "pass" number) eiher:
+#   1 check for input tweeted since last update, or
+#   2 process the current template and tweet a link to result
 def main(args):
-  # Depending on the bot's current state (pass number) eiher:
-  #   1 check for user input tweeted since last update, or
-  #   2 process the current template and tweet a link to the result
-  # Args:
-  #  args: the command line arguments parsed by argparse 
+  # parse command line args passed to main
 
-  # Initialization: read contents of ./templates to create a run order, store it to file
-  # and use the letters module to initialize the next template
+  # read ./templates to create a run order and store it to file
+  # and use the letters module to initialize the next template via init_bot()
   if args.init:
     print "Initializing templates."
     init_bot()
 
+  # show contents of template.pkl and bot_data.pkl
   elif args.show:
     letters.show_files()
+    with open("bot_data.pkl", "rb") as data_file:
+      bot_data = pickle.load(data_file)
+    pprint.pprint(bot_data)
 
-  # add new files from ./templates to run order
-  elif args.update:
-    print "Updating templates."
-    with open("./bot_data.pkl", "rb") as data_file:
-      data = pickle.load(data_file)
-      run_order = data["run_order"]
-
-    # read files from folder
-    files = glob.glob("./templates/*.txt")
-    run_order.extend([template for template in files if template not in run_order])
-    
-    # store back to file
-    with open("./bot_data.pkl", "wb") as data_file:
-      data["run_order"] = run_order
-      pickle.dump(data, data_file, 2)
-
-  # Normal execution procedure:
-  # read input and process current template if this is the final call
+  # No cammand line argument: determine the correct procedure from the bot's current state.
+  # Read input and process current template if this is the final call.
   else:
-    with open("./bot_data.pkl", "rb") as data_file:
+    with open("bot_data.pkl", "rb") as data_file:
       bot_data = pickle.load(data_file)
 
-    with open("./index_data.pkl", "rb") as index_file:
-      index_data = pickle.load(index_file)  # ((word, tag), index)
+    with open("template.pkl", "rb") as template_file:
+      template_data = pickle.load(template_file) 
+
 
     run = bot_data["run"]
     next_run = (run % CHECKS_PER_LETTER) + 1
     print "run:", run
 
-    # case 1: final call. Process current template and initialize the next one
+    # final call: process current template and initialize the next one
     if run == CHECKS_PER_LETTER:
 
       # if current template already processed, initialize the next template and exit
@@ -314,17 +298,15 @@ def main(args):
 
       # read the last words from Twitter and if necessary, fill missing from database
       print "Final pass"
-      #letters.parse_input()
-      parse_twitter(bot_data["latest_tweet"], TWITTER_ACCOUNT)
-      letters.fetch_words()
+      parse_twitter(bot_data["latest_tweet"], "@vocal_applicant")
+      letters.fill_missing()
 
       print "Processing current template. See the generated .txt file for results."
-      fname = letters.randomize_letter()
+      letters.compose_letter()
+
       # tweet link to finished letter
-      # NOTE: the bot won't actually send the file to the server! This is done by a separete
-      # shell script after this script exits
       title = bot_data["current_title"]
-      link = PATH_TO_SERVER + fname
+      link = PATH_TO_SERVER   # path to active.php
       msg = title + ": " + link+"\nCheck " + str(run) +" of " + str(CHECKS_PER_LETTER)
       tweet(msg)  # no need to store tweet id
 
@@ -333,20 +315,18 @@ def main(args):
       sys.exit()
 
 
-    # case 2: not the last pass, but current template is already processed. Wait until
-    # the 4th pass to start the next template
+    # not the last pass, but current template is already processed: do nothing
     elif bot_data["processed"]:
       print "Waiting for permission to start the next template."
 
 
-    # case 3: not the last pass and more words to read. Cehck for Twitter input
+    # not the last pass and bot not yet processed
     else:
       # read input since last call and check if more still needed
       print "Need more words"
-      parse_twitter(bot_data["latest_tweet"], TWITTER_ACCOUNT)
+      parse_twitter(bot_data["latest_tweet"], "@vocal_applicant")
       status = get_template_status()
 
-      # check if these were the final words needed
       if status:
         title = bot_data["current_title"]
         msg = "Currently writing " + title + ".\n" + status + "\nCheck " + str(run) +" of " + str(CHECKS_PER_LETTER)
@@ -360,15 +340,19 @@ def main(args):
       else:
         bot_data["processed"] = True
         print "Processing current template. See the generated .txt file for results."
-        fname = letters.randomize_letter()
+        fname = letters.compose_letter()
         title = bot_data["current_title"]
-        link = PATH_TO_SERVER + fname
-        msg = title + ": " + fname +"\nNext letter in " + str((CHECKS_PER_LETTER - run)*CRON_DELTA) + " hours."
+        link = PATH_TO_SERVER
+        msg = title + ": " + link +"\nNext letter in " + str((CHECKS_PER_LETTER - run)*CRON_DELTA) + " hours."
+
+        if len(msg) > 140:
+          msg = title + ": " + link
+          
         tweet(msg)  # no need to store tweet id
 
 
     bot_data["run"] = next_run
-    with open("./bot_data.pkl", "wb") as data_file:
+    with open("bot_data.pkl", "wb") as data_file:
       pickle.dump(bot_data, data_file, 2)
 
 
@@ -377,15 +361,12 @@ def main(args):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Twitter letter randomizer.")
   parser.add_argument("--init", help="Generate a random run order from ./templates", action="store_true")
-  parser.add_argument("--update", help="Add new files from ./templates to run_order", action="store_true")
   parser.add_argument("--show", help="Shows contents of input.pkl and index_data.pkl", action="store_true")
   args = parser.parse_args()
 
-  try:
-    main(args)
-  except IOError as e:
-    print e
-    print "Initialize the bot with the --init switch"
+  main(args)
+
+
 
 
 
