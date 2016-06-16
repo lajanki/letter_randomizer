@@ -1,0 +1,35 @@
+#letter {
+	font-size: 16px;
+	margin-top: 150px;
+	
+}
+
+
+#letter-content {
+	
+	margin-left: 60px;
+	margin-right: 60px;
+	/*background-image: url("letter_background.png");*/
+}
+
+div.page-header {
+	margin-bottom: 0px;
+}
+
+h1 {
+	font-size: 28px;
+
+}
+
+h2 {
+	font-size: 20px;
+}
+
+span.signature {
+	font-family: cursive;
+	font-style: italic;
+}
+
+body {
+	background-image: url("table-background.jpg");
+}

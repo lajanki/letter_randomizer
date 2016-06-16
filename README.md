@@ -61,6 +61,8 @@ Addtionally:
 
 
 #### Changelog
+16.6.2016
+ * Added frontend folder with PHP scripts responsible for displaying the results
 27.2.2016
  * Letter files are now html-encoded for prettier outputting in a website. No need to keep track of line breaks anymore.
  * Signatures are now randomly generated using http://www.behindthename.com/random/
