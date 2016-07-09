@@ -62,12 +62,15 @@ Addtionally:
 #### Changelog
 9.7.2016
  * Added support for sending new input through the server and simplified input parsing in bot.py and letters.py.
+
 16.6.2016
  * Added frontend folder with PHP scripts responsible for displaying the results
+
 27.2.2016
  * Letter files are now html-encoded for prettier outputting in a website. No need to keep track of line breaks anymore.
  * Signatures are now randomly generated using http://www.behindthename.com/random/
  * File I/O down to 1 file. User input is now entered directly to template rather than stored in a buffer.
+
 15.2.2016
  * Initial release
 
