@@ -30,6 +30,9 @@
 #     file matching each letter file name to a title/description               #
 #																			   #
 # Change log 																   #
+# 9.7.2016 																	   #
+#	-parse_input() is now the only access point to inserting new data to       #
+#	 template.pkl throughout letters.py and bot.py. 						   #
 # 27.5.2016  																   #
 #	-Letter files are now html-encoded for prettier outputting in a website.   #
 #	  No need to keep track of line breaks anymore.                            #
@@ -38,11 +41,8 @@
 #	-File I/O down to 1 file. User input is now entered directly to template   #
 #	  rather than stored in a buffer. 										   #
 # 13.2.2016  																   #
-# 	-Initial release 														   #
+# 	-Initial release. 														   #
 #                                                                              #
-#                                                                              #
-# Lauri Ajanki                                                                 #
-# 27.5.2016                                                                    #
 ################################################################################
 
 import requests
@@ -60,8 +60,9 @@ import time
 import sqlite3 as lite
 
 
+# define valid nltk word classes for switches
 CLASSES = ["JJ", "JJR", "JJS", "NN", "NNS", "RB", "RBR", "VB", "VBN", "VBD", "VBG"]
-rpi_path = ""
+rpi_path = "/home/pi/python/letters/"
 
 
 def parse_letter(letter, splice_percentage = 0.35):
@@ -79,8 +80,10 @@ def parse_letter(letter, splice_percentage = 0.35):
 	
 	# nltk tag each paragraph (==html tagged section)
 	tokens = [(nltk.word_tokenize(token.text), token.name, token.parent.name) for token in html_tagged]
+	#pprint.pprint(tokens[2])  # ([words], html_tag)
 
 	tagged = [(nltk.pos_tag(token[0]), token[1]) for token in tokens]
+	#pprint.pprint(tagged[2])  # ([(word, tag)], html_tag)
 
 
 	change_frame = [] # frame for words to change in each paragraph
@@ -95,11 +98,6 @@ def parse_letter(letter, splice_percentage = 0.35):
 		k = int(splice_percentage * len(valid))
 		change = random.sample(valid, k)
 
-		# random.sample returns elements in random order, use the index to sort first by paragraph then by word.
-		# Doesn't  really matter, only effects whether the each input word should be placed to the first available slot,
-		# slots are randomized anyway.
-		#change.sort(key = lambda x: (x[0], x[1]))
-		
 		# add change data to frame
 		change_frame.extend(change)
 
@@ -164,45 +162,50 @@ def parse_letter(letter, splice_percentage = 0.35):
 	return title
 
 
-def parse_input(s):
+def parse_input(s, first_only=True):
 	"""Parse input for words needed to fill missing data in template.pkl.
+	Modifies template.pkl
 	Arg:
 		s (string): text to use as input
+		first_only (boolean): whether only the first valid word of a tweet should be parsed
 	"""
 	with open(rpi_path+"template.pkl", "rb") as template_file:
 		template_data = pickle.load(template_file)
 		change_frame = template_data["change_frame"]
 		template = template_data["template"]
 
-	print "Parsing", s
+	# don't procede to call nltk if all gaps already filled
+	if not change_frame:
+		return
+
+	if s:
+		print "Parsing", s
 	tokens = nltk.word_tokenize(s)
+	# drop tokens with unwanted characters
+	tokens = [ token for token in tokens if not any(item in token for item in ["//", "html", "@", "http"]) ]
+	# should only the first word be considered?
+	if first_only:
+		tokens = tokens[:1]
 	tagged = nltk.pos_tag(tokens)
 
-	# loop over change_frame to see if tag of word needed to fill matches some in tags
-	new_words = []
-	tmp = []
-	tags = [ token[1] for token in tagged ]	# list of tags of s
-	for pidx, idx, tag in change_frame:	 # (paragraph index, word index, tag)
-		if tag in tags:
-			# find first occurance of this tag in tags, remove it and store new word data in a new file
-			tidx = tags.index(tag)
-			tags[tidx] = None  # mark this tag as invalid to prevent the same word from being inserted more than once
+	# check if tagged words match those needed to fill blanks
+	for word, tag in tagged:
+		# get change_frame tuples with matching tag
+		valid = [token for token in change_frame if token[2] == tag]
 
-			# new word data: (paragraph index, word index, new word)
-			new_words.append( (pidx, idx, tokens[tidx]) )
+		# replace the topmost item in valid with the tagged word
+		if valid:
+			data = valid.pop()
+			new = (word, (data[0], data[1])) # (word, (paragraph index, word index))
+			old = template[data[0]][0][data[1]]
 
-		# if no match found, store in tmp for recording which data to keep
-		else:
-			tmp.append((pidx, idx, tag))
-
-
-	# modify change_frame and template to reflect new words
-	change_frame = tmp
-	for pidx, idx, word in new_words:
-		print(template[pidx][0][idx], "->", word)
-		template[pidx][0][idx] = word
+			# add new word to template and remove old data from change_frame
+			print "Adding:", new[0], "as", old
+			template[data[0]][0][data[1]] = new[0]
+			change_frame.remove(data)
 
 	# store new change_frame and template back to file
+	#d = {"template":template, "change_frame":change_frame}
 	template_data["template"] = template
 	template_data["change_frame"] = change_frame
 	with open(rpi_path+"template.pkl", "wb") as template_file:
@@ -229,6 +232,8 @@ def fill_missing():
 			new = row[0]
 
 			# assign new word in template
+			#print("replace:")
+			#print(template[pidx][0][idx], "->", new)
 			template[pidx][0][idx] = new
 
 	# empty change_frame and store new data back to file
@@ -239,14 +244,16 @@ def fill_missing():
 
 
 def compose_letter():
-	"""Join template data to create a html-tagged letter."""
+	"""Join template data to create a html-tagged letter.
+	Return:
+		the letter as a string.
+	"""
+
 	with open(rpi_path+"template.pkl", "rb") as template_file:
 		template_data = pickle.load(template_file)
-		#change_frame = template_data["change_frame"]
 		template = template_data["template"]
 		list_metadata = template_data["list_metadata"]
 		title = template_data["title"]
-
 
 	# define replacements for trimming whitespaces around punctuation
 	replacements = {" ,":",", " .":".", " !":"!", " ?":"?", " :": ":", " ;":";", " )":")", "( ":"(", "$ ":"$", "* ":"*", " @ ":"@", " '":"'"}
@@ -255,7 +262,6 @@ def compose_letter():
 
 	start_idx = [i for (i, tag) in li_start]
 	end_idx = [i for (i, tag) in li_end]
-
 
 	s = html_format(title, "h1") # add title to beginning
 	letter = []
@@ -282,7 +288,6 @@ def compose_letter():
 
 		s += text
 
-
 	# use timestamp to generate a filename for output
 	timestamp = time.strftime("%d.%m.%y")
 	timestamp = timestamp.replace(".", "_")
@@ -304,7 +309,6 @@ def randomize_letter():
 	compose_letter()
 
 
-
 #==================================================================================
 # Helper functions =
 #===================
@@ -321,14 +325,20 @@ def show_files():
 
 
 def html_format(string, tag):
-	"""Enclose string in tags."""
+	"""Enclose string in tags.
+	Return
+		a html-tagged string
+	"""
 	return u"<{0}>{1}</{0}>".format(tag, string)
 
 
-def generate_name(nfirst_names = 1):
+def generate_name(nfirst_names = 1, first_only=False):
 	"""Use requests on http://www.behindthename.com/random/ to generate a name.
 	Arg:
-		nfirst_names (int): number first names the result should have"""
+		nfirst_names (int): number first names the result should have
+	Return:
+		the generated name
+	"""
 
 	# set name parameters,
 	# first + middle + surname
@@ -354,11 +364,12 @@ def generate_name(nfirst_names = 1):
 	}
 	r = requests.get("http://www.behindthename.com/random/random.php", params=name_params)
 
-
 	soup = bs4.BeautifulSoup(r.text, "lxml")
 
 	# get the text value of each <a> element having class "plain"
 	names = [a.text for a in soup.find_all("a", class_="plain")]
+	if first_only:
+		return names[0]
 	return " ".join(names)
 
 
@@ -371,29 +382,15 @@ if __name__ == "__main__":
 	parser.add_argument("--random-letter", help="Generate a random letter", action="store_true")
 	parser.add_argument("--fill-missing", help="Fill all missing words from database", action="store_true")
 	parser.add_argument("--parse-input", help="Parse <input> for words to fill gaps in processed template.", metavar="input")
+	#parser.add_argument("--parse-all", help="Parse the contents of templates for database dictionary.", action="store_true") # TODO implement!
 	parser.add_argument("--show", help="Shows contents of input.pkl.", action="store_true")
 	args = parser.parse_args()
-
-
-	"""
-	# before looping over args, check if current template is already processed
-	with open(rpi_path+"template.pkl", "rb") as template_file:
-		template_data = pickle.load(template_file)
-		change_frame = template_data["change_frame"]
-
-	if not change_frame:
-		print "Current template already processed."
-		print compose_letter()
-		print "Use --init to initialize the next template."
-		sys.exit(0)
-	"""
 
 	if args.init or not os.path.isfile(rpi_path+"template.pkl"):
 		print "Initializing..."
 		files = glob.glob(rpi_path+"templates/*.txt")
 		letter = random.choice(files)
 		print "Using", letter
-
 		parse_letter(letter)
 
 	elif args.parse_input:

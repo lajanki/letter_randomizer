@@ -49,7 +49,7 @@ Running either of the Python scripts will create several Pickle encoded metadata
    * run (int): the run number the bot is currently on
    * current_title (string): the title of the letter currently being processed
    * latest_tweet (string): id of the latest tweet
-   * processed (bool): whether the current template is already processed
+   * processed (boolean): whether the current template is already processed
 
 Addtionally:
   * the templates folder contains a collection pre-filled letters and summary json file defining a title for each filename
@@ -59,8 +59,9 @@ Addtionally:
 
 
 
-
 #### Changelog
+9.7.2016
+ * Added support for sending new input through the server and simplified input parsing in bot.py and letters.py.
 16.6.2016
  * Added frontend folder with PHP scripts responsible for displaying the results
 27.2.2016

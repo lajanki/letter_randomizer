@@ -38,6 +38,11 @@ A frame for displaying the letter passed from letters.php as $_GET["filename"], 
 			});
 			$file_string = file_get_contents($files[0]);
 		}
+
+		// decode bot status from bot_status.json
+		$bot_status = file_get_contents("bot_status.json");
+		$bot_status = json_decode($bot_status, true);
+
 	?>
 
 
@@ -62,10 +67,26 @@ A frame for displaying the letter passed from letters.php as $_GET["filename"], 
 				 	<div class="container-fluid">
 					    <ul class="nav navbar-nav">
 					      	<li><a href="http://lajanki.mbnet.fi/">Index</a></li>
-					      	<li><a href="http://lajanki.mbnet.fi/date_profiler/profiler.php">Date profiles</a></li>
 					      	<li><a href="https://twitter.com/vocal_applicant">@vocal_applicant</a></li>
+					      
+					      	<!-- dropdown menu for user input -->
+					      	<li class="dropdown">
+          						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">User input<span class="caret"></span></a>
+						          <ul class="dropdown-menu">
+						          	<form class="navbar-form navbar-left" action="read_input.php" target="_blank">
+									  <div class="form-group">
+									    Currently writing: <?php echo $bot_status["current_title"] ?>
+									    <input type="text" name="user_input" class="form-control" placeholder="Enter input">
+									  </div>
+									  <button type="submit" class="btn btn-default">Submit</button>
+									</form>
+						          </ul>
+						    </li>
+						    <li><a href="http://lajanki.mbnet.fi/date_profiler/profiler.php">Date profiles</a></li>
 					    </ul>
 				  	</div>
+
+
 				</nav>
 
 				<!-- actual letter, new div for background -->
