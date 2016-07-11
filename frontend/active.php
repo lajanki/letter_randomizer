@@ -24,7 +24,7 @@ A frame for displaying the letter passed from letters.php as $_GET["filename"], 
 	<body>
 
 	<?php
-		//filename of the letter to display as passed from letters.php or empty if active.php was opened directly
+		// 1 read filename of the letter to display as passed from letters.php through GET or empty if active.php was opened directly
 		$filename = $_GET['filename'];
 		$file_string = file_get_contents($filename);
 
@@ -39,10 +39,45 @@ A frame for displaying the letter passed from letters.php as $_GET["filename"], 
 			$file_string = file_get_contents($files[0]);
 		}
 
-		// decode bot status from bot_status.json
+		// 2 check if user input was POSTED through the submission form
+		$submit_response = $_POST["user_input"];  // NOTE: page refresh will not empty $_POST (data will be resent)
+		if (!empty($submit_response)) {
+	
+			// trim and encode special characters for sanitazion
+			$text = htmlspecialchars($submit_response);
+			$text = stripslashes($text);
+			$text = trim($text, "\n\r");
+			$time = date("j.n.Y H:i:s");
+			// store user's IP address for logginf purposes
+			$addr = $_SERVER["REMOTE_ADDR"];
+
+			// check if user_input.json already exists
+			if (file_exists("./user_input.json")) {
+				// read previous data from file
+				$user_input = file_get_contents("./user_input.json");
+				$user_input = json_decode($user_input, true);
+
+				// add new data to $user_input
+				array_push($user_input["entry"], $text);
+				array_push($user_input["timestamp"], $time);
+				array_push($user_input["ip"], $addr);
+
+				// write back to file
+				file_put_contents("./user_input.json", json_encode($user_input));
+			}
+			// create new file with the user submitted data
+			else {
+				$data = array("entry" => array($text), "timestamp" => array($time), "ip" => array($addr));
+				file_put_contents("./user_input.json", json_encode($data));
+			}
+
+			$submit_response = "Data submitted and will be parsed for input during next status check. Follow <a href='https://twitter.com/vocal_applicant'>@vocal_applicant</a> for updates.";
+		}
+		
+
+		// 3 decode bot status from bot_status.json
 		$bot_status = file_get_contents("bot_status.json");
 		$bot_status = json_decode($bot_status, true);
-
 	?>
 
 
@@ -54,12 +89,12 @@ A frame for displaying the letter passed from letters.php as $_GET["filename"], 
 			<div class="col-md-2">
 			</div>
 			
-
 			<!-- middle section for content -->
 			<div class="col-md-8" id="letter">
 				<div class="page-header">
 				 	<h1>Letters from Twitter</h1> 
-				 	<p>Letter and form templates filled with input taken from Twitter</p> 
+				 	<p>Letter and form templates filled with input taken from Twitter</p>
+			 		<p id="submit_response"><?php echo $submit_response ?></p>
 				</div>
 
 				<!-- navbar for buttons to linking letter/next template -->
@@ -73,12 +108,12 @@ A frame for displaying the letter passed from letters.php as $_GET["filename"], 
 					      	<li class="dropdown">
           						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">User input<span class="caret"></span></a>
 						          <ul class="dropdown-menu">
-						          	<form class="navbar-form navbar-left" action="read_input.php" target="_blank">
+						          	<form class="navbar-form navbar-left" method="post">
 									  <div class="form-group">
 									    Currently writing: <?php echo $bot_status["current_title"] ?>
 									    <input type="text" name="user_input" class="form-control" placeholder="Enter input">
+									    <button class="btn btn-default" type="submit">Submit</button>
 									  </div>
-									  <button type="submit" class="btn btn-default">Submit</button>
 									</form>
 						          </ul>
 						    </li>
