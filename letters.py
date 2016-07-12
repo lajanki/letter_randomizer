@@ -248,7 +248,6 @@ def compose_letter():
 	Return:
 		the letter as a string.
 	"""
-
 	with open(rpi_path+"template.pkl", "rb") as template_file:
 		template_data = pickle.load(template_file)
 		template = template_data["template"]
@@ -373,6 +372,33 @@ def generate_name(nfirst_names = 1, first_only=False):
 	return " ".join(names)
 
 
+def parse_for_dictionary(fname):
+	"""Parse given template file for database dictionary.
+	Arg:
+		fname (string): filename, or part of a name, to parse or * for all templates
+	"""
+	import bs4
+	import dbaccess
+
+	files = glob.glob(rpi_path+"templates/*.txt")
+	if fname == "all":
+		files_to_parse = files
+	else:
+		files_to_parse = [ file for file in files if fname in file ]
+
+	# parse html with beatifulSoup
+	for file in files_to_parse:
+		print "parsing", file
+		soup = bs4.BeautifulSoup(open(file), "lxml")
+		s = soup.text.replace("\n", " ")
+
+		dbaccess.parse_for_dictionary(s)
+	dbaccess.database_size()
+
+
+
+
+
 #==================================================================================
 # Main =
 #=======
@@ -382,7 +408,7 @@ if __name__ == "__main__":
 	parser.add_argument("--random-letter", help="Generate a random letter", action="store_true")
 	parser.add_argument("--fill-missing", help="Fill all missing words from database", action="store_true")
 	parser.add_argument("--parse-input", help="Parse <input> for words to fill gaps in processed template.", metavar="input")
-	#parser.add_argument("--parse-all", help="Parse the contents of templates for database dictionary.", action="store_true") # TODO implement!
+	parser.add_argument("--parse-templates", help="Parse the contents of templates for database dictionary.")
 	parser.add_argument("--show", help="Shows contents of input.pkl.", action="store_true")
 	args = parser.parse_args()
 
@@ -396,6 +422,9 @@ if __name__ == "__main__":
 	elif args.parse_input:
 		#parse_input("Here are your sealions, sir.")
 		parse_input(args.parse_input)
+
+	elif args.parse_templates:
+		parse_for_dictionary(args.parse_templates)
 
 	elif args.fill_missing:
 		fill_missing()
