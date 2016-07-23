@@ -24,30 +24,34 @@
 #   https://dev.twitter.com/oauth/overview/application-owner-access-tokens    #
 #                                                                             #
 # File structure:                                                             #
-# * This script one json file for internal bookkeeping:             		  #
+# * This script uses one json file for internal bookkeeping:             		  #
 #    bot_data.json - current state of the bot, a dict of:                     #
 #    * run_order (list): list of files to process                             #
 #    * run (int): the run number the bot is currently.                        #
 #        (runs 1,2,3 = ask for input,                                         #
-#	     4 = check final input and tweet result) 							  #
-#    * current_title (string): the title of the letter currently being 		  #
-#	   processed                        									  #
+#	     4 = check final input and tweet result) 							                  #
+#    * current_title (string): the title of the letter currently being 		    #
+#	   processed                        									                      #
 #    * latest_tweet (string): id of the latest tweet                          #
 #    * processed (boolean): whether the current template is already processed #
 # * Additionally Twitter access tokens are read from keys.json. Note that     #
 #   this file is empty and the actual tokens needs to inserted before         #
 #   the script will run!                                                      # 
 #                                                                             #
-# Change log  																  #
-# 9.7.2016																	  #
-#   -Added support for parsing input from the server 						  #
-#	 (lajanki.mbnet.fi/active.php): parse_input() now gathers user input      #
-#	 Twitter and the server and passes it to letter.parse_input() for 		  #
-#	 actually adding them to template.pkl							          #
-# 27.5.2016 																  #
-#	-File I/O changed to conform to the changes in letters.py                 #
-# 13.2.2016 																  #
-#	-Initial release 														  #
+# Change log  																                                #
+# 23.7.2016                                                                   #
+#  -Small code cleanup to accomadete changes in letters.py                    #
+#  -moved get_template_status() to letters.py as it's not directly related    #
+#   to the bot                                                                #    
+# 9.7.2016																	                                  #
+#  -Added support for parsing input from the server 						              #
+#	  (lajanki.mbnet.fi/active.php): parse_input() now gathers user input       #
+#	  Twitter and the server and passes it to letter.parse_input() for 		      #
+#	  actually adding them to template.pkl							                        #
+# 27.5.2016 																                                  #
+#	 -File I/O changed to conform to the changes in letters.py                  #
+# 13.2.2016 																                                  #
+#	 -Initial release 														                              #
 #                                                                             #
 ###############################################################################
 
@@ -58,7 +62,6 @@ import pprint
 import itertools
 import glob
 import random
-import pickle
 import argparse
 import sys
 import requests
@@ -91,7 +94,7 @@ PATH_TO_SERVER = "http://lajanki.mbnet.fi/active.php"
 #================
 def parse_input(parent_id, query="@vocal_applicant"):
   """Reads input from Twitter and website to shuffled list and parse content for input.
-  Modifies template.pkl via letters.parse_input()
+  Modifies template.json via letters.parse_input()
   Args:
     parent_id (string): a tweet id string
     query (string): a Twitter search query to be passed to twython object
@@ -116,7 +119,6 @@ def parse_input(parent_id, query="@vocal_applicant"):
   # read as many tweets as possible and move on 
   except twython.TwythonRateLimitError as e:
     print e
-    break
   except twython.TwythonError as e:
     print e
      
@@ -180,7 +182,7 @@ def init_template(bot_data):
     print "tweet:", msg
 
     # post status in another tweet
-    status = get_template_status()
+    status = letters.get_template_status()
     tweet_id = tweet(status)
     print "tweet:", status
 
@@ -203,42 +205,6 @@ def init_template(bot_data):
 #==================================================================================
 # Helper functions =
 #===================
-def get_template_status():
-  """Check how many words are still needed to fill the current template.
-  Return:
-    a string describing how many adjectives, nouns, verbs and adverbs are needed
-  """
-  with open(rpi_path+"template.pkl", "rb") as template_file:
-    template_data = pickle.load(template_file)
-    change_frame = template_data["change_frame"]
-    template = template_data["template"]
-
-  # no more words needed, return an empty string
-  if not change_frame:
-    return ""
-
-  # create a dict to map tags to number of matching words needed
-  tags = [token[2] for token in change_frame]
-  d = dict.fromkeys(letters.CLASSES, 0)
-  for tag in tags:
-    d[tag] = tags.count(tag)
-
-  # new dict for printing grouped data
-  d_h = dict()
-  d_h["adjectives"] = d["JJ"] + d["JJR"] + d["JJS"]
-  d_h["nouns"] = d["NN"] + d["NNS"]
-  d_h["verbs"] = d["VB"] + d["VBN"] + d["VBD"] + d["VBG"]
-  d_h["adverbs"] = d["RB"] + d["RBR"]
-
-  need = "Words needed:\n"
-  for key in d_h:
-    if d_h[key] > 1:
-      need += str(d_h[key]) + " " + key +"\n"
-    elif d_h[key] == 1:
-      need += str(d_h[key]) + " " + key[:-1] +"\n"
-  return need
-
-
 def tweet(msg):
   """A wrapper around Twython's update_status():
   tweets msg and return its id string.
@@ -266,6 +232,7 @@ def main(args):
   # and use the letters module to initialize the next template via init_bot()
   if args.init:
     print "Initializing templates."
+    #tweet("Resetting")
     init_bot()
 
   # show bot status
@@ -285,8 +252,8 @@ def main(args):
     with open(rpi_path+"bot_status.json", "rb") as f:
       bot_data = json.load(f)
 
-    with open(rpi_path+"template.pkl", "rb") as template_file:
-      template_data = pickle.load(template_file) 
+    #with open(rpi_path+"template.pkl", "rb") as template_file:
+    #  template_data = pickle.load(template_file) 
 
     run = bot_data["run"]
     next_run = (run % CHECKS_PER_LETTER) + 1
@@ -327,7 +294,7 @@ def main(args):
       # read input since last call and check if more still needed
       print "Need more words"
       parse_input(bot_data["latest_tweet"], "@vocal_applicant")
-      status = get_template_status()
+      status = letters.get_template_status()
 
       if status:
         title = bot_data["current_title"]
@@ -365,7 +332,7 @@ def main(args):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Twitter letter randomizer.")
   parser.add_argument("--init", help="Generate a random run order from ./templates", action="store_true")
-  parser.add_argument("--show", help="Shows contents of input.pkl and bot_status.json", action="store_true")
+  parser.add_argument("--show", help="Shows contents of bot_status.json", action="store_true")
   args = parser.parse_args()
 
   main(args)

@@ -1,4 +1,4 @@
-Dear Ms. Olson,
+Dear Ms. <span class="receiver"></span>,
 
 While visiting city hall, I saw the flyer posted by the Anchorage Public Library. I feel it is very important to support institutions of culture and learning, and I am interested in the Circulation Volunteer position. If there is no current need for volunteers in this position, I would be willing to donate my time in another needed capacity.
 
@@ -8,5 +8,5 @@ Please give me a call and let me know what I can do to help. I can be reached by
 
 Thank you for your time and all you do for our library. I look forward to talking to you.
 
-Best,
-Karen Johnson
+Best,  
+<span class="signature"></span>

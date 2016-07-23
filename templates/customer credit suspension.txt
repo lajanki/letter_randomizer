@@ -1,0 +1,16 @@
+Dear Mr. <span class="receiver"></span>
+
+I have enclosed a copy of your recent order which you charged to your credit card. Unfortunately your credit card was not approved. Because I am sure this is the result of an oversight or some mistake on the bank's part, please call me at 555-5555 and tell me how to proceed. You may also send a check or money order payable to the company:
+
+Kelling Corporation  
+1600 Main Street  
+Valley Forge, Kansas 12345
+
+Your check or money order should be for the amount of your recent purchase, which you will find highlighted at the top of the copy of the enclosed order. Please include your customer ID number with all correspondence.
+
+Your immediate attention to this matter will be greatly appreciated.
+
+Regards,  
+<span class="signature"></span>  
+Customer Manager  
+Kelling Corporation

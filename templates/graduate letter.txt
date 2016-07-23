@@ -1,10 +1,10 @@
-Dear Mr. Chua,
+Dear Mr. <span class="receiver"></span>,
 
 I am writing to express my interest for the position of Recruitment Assistant in your esteemed company.
 
-Having recently obtained my Bachelor’s Degree in Business Administration major in Human Resource Development Management (BSBA-HRDM) in the Polytechnic University of the Philippines (PUP), I wish to bring my knowledge, skills and commitment to excellence to your company’s innovative environment.
+Having recently obtained my Bachelor's Degree in Business Administration major in Human Resource Development Management (BSBA-HRDM) in the Polytechnic University of the Philippines (PUP), I wish to bring my knowledge, skills and commitment to excellence to your company's innovative environment.
 
-As a Business Administration student, majoring in HR management, I’ve become equipped with the necessary knowledge that come with the position including manpower recruitment, workforce organization, personnel training and compensation as well as legal provisions and other labor concerns.
+As a Business Administration student, majoring in HR management, I've become equipped with the necessary knowledge that come with the position including manpower recruitment, workforce organization, personnel training and compensation as well as legal provisions and other labor concerns.
 
 My internship at San Miguel Corporation also afforded me with the crucial skills to work with some of the best professionals in the recruitment and human resources industry. Being a trainee has developed in me enthusiasm and a true passion for human resources and has subsequently convinced me that human resource management is my true calling.
 
@@ -12,8 +12,7 @@ For additional details regarding my qualification and expertise, please review m
 
 Thank you for taking the time to consider this application and I look forward to hearing from you.
 
-Sincerely,
-
-Jessica Cenadoza
+Sincerely,  
+<span class="signature"></span>
 
 

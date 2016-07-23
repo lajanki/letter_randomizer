@@ -1,17 +1,16 @@
-Dear Mr. Good:
+Dear Mr. <span class="receiver"></span>,
 
 On behalf of the Military Order of the Purple Heart and the veterans we serve, I wish to express our sincere appreciation for your donation of $100.00.
 
-This gift supports MOPH’s efforts in our commitment to veterans helping veterans. This continuing support will guarantee our availability to assist our country’s most vulnerable heroes.
+This gift supports MOPH's efforts in our commitment to veterans helping veterans. This continuing support will guarantee our availability to assist our country's most vulnerable heroes.
 
-For federal income taxation purposes, this letter acknowledges your contribution. Military Order of the Purple Heart of the USA, Inc., is a non-profit, 501(c)(19) veteran’s service organization. Donors may deduct contributions as provided in IRC 170(c)(3) of
-the U.S. Tax Code.
+For federal income taxation purposes, this letter acknowledges your contribution. Military Order of the Purple Heart of the USA, Inc., is a non-profit, 501(c)(19) veteran's service organization. Donors may deduct contributions as provided in IRC 170(c)(3) of the U.S. Tax Code.
 
-Please retain this letter as proof of your charitable contribution.
+Please retain this letter as proof of your charitable contribution.  
 Thank you for helping us to help veterans.
 
-Sincerely,
-Jack T. Mann
+Sincerely,  
+<span class="signature"></span>  
 Chapter Adjutant
 
 No goods or services were provided to you as a result of this donation.

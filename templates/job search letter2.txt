@@ -1,0 +1,10 @@
+Dear Mr. <span class="receiver"></span>,
+
+My purpose in writing is to apply for the marketing position that Barelly Medical Supply posted on its web site. Escobar Tuscon, in your sales department, also encouraged me to apply.
+
+Your list of desired qualifications includes a background in foreign language to work with Doe's international clientele. I speak fluent Spanish and German, two of your prime markets. In addition, working at City Pharmaceutical over the last three years has given me valuable experience in the medical supply industry. I am ready to further develop my marketing skills at Barelly Medical Supply.
+
+I look forward to an opportunity to discuss this marketing position. I will contact your office next week to set up a convenient time for an interview. Thank you for your time and consideration.
+
+Sincerely,  
+<span class="signature"></span>

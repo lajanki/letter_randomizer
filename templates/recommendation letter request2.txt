@@ -1,0 +1,11 @@
+Dear Mr. <span class="receiver"></span>,
+
+This month I am applying for a position as a typesetter with Bourne Publishers. It's been just over a year since I worked under your supervision at Graphmaster. Because of the extensive training you gave me there, I naturally consider you one of the best references to vouch for my typesetting skills. Would you be able to prepare a letter of recommendation for me?
+
+I'm hopeful you'll consider describing for Bourne the broad range of projects I worked on while at Graphmaster--from fliers, newsletters, posters, and wedding announcements to some book-length projects. Also, since the position I'm applying for requires some versatility with various desktop word-processing and typesetting applications, could you also mention my computer literacy?
+
+I'd greatly appreciate your help and feel that your recommendation will help me compete successfully for this position. I hope this will not be an imposition. I've enclosed a stamped, self-addressed envelope for your use in forwarding the recommendation to Doe. Thank you very much for your assistance.
+
+Kind Regards,  
+<span class="signature">Jessica Cenadoza</span>
+

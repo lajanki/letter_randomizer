@@ -1,0 +1,12 @@
+Dear Dr. <span class="receiver"></span>,
+
+It is with great pleasure that I submit my application packet for a Master’s Degree in Physical Education in the Department of Physical Performance and Development at the University of New Mexico. I am currently completing my education in the Bachelor of University Studies at UNM, with one of my emphasis in the area of Exercise Science.
+
+I believe the Physical Performance and Development Exercise Science Master’s Degree offers me the greatest opportunity to expand my education in some very meaningful areas of interest. My career interests lead me towards an avocation of exercise science, cardiac rehabilitation and fitness prescription. I want to be very involved in improving the quality of lives of those individuals I have the opportunity to help. I also feel the faculty at the University of New Mexico is most qualified to help me attain my goals.
+
+I see UNM as a wonderful next step for me in attaining my ambitions. I thank you for the opportunity to submit this application for your consideration. Please contact me if there is anything else I need to provide. I look forward to communicating with you in the near future.
+
+
+Sincerely,  
+<span class="signature"></span>
+

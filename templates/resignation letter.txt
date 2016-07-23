@@ -1,4 +1,4 @@
-Dear Mr. Agnussen
+Dear Mr. <span class="receiver"></span>,
 
 Please accept this letter as notice of my resignation from the position of senior economy manager at Abbay Ltd.
 
@@ -8,8 +8,8 @@ I have enjoyed being a part of the team and am thankful for the opportunities yo
 
 I hope that I can rely on you for a positive reference in future.
 
-Yours sincerely,
-Sam Gardner
+Yours sincerely,  
+<span class="signature">Sam Gardner</span>
 
 
 

@@ -42,9 +42,9 @@ To use the bot:
 
 ## File structure
 
-Running either of the Python scripts will create several Pickle encoded metadata files for internal bookkeeping:
+Running either of the Python scripts will create several json encoded metadata files for internal bookkeeping:
  * Template data regarding the position and types of words needed is stored in template.pkl
- * The bot's status is stored in bot_data.pkl, which consists of:
+ * The bot's status is stored in bot_status.json, which consists of:
    * run_order (list): list of files to process
    * run (int): the run number the bot is currently on
    * current_title (string): the title of the letter currently being processed
@@ -60,11 +60,16 @@ Addtionally:
 
 
 #### Changelog
+23.7.2016
+ * Changed letter formatting to markdown. All html parsing is now done by markdown and beautifulsoup.
+ * Added a bunch of templates to /templates.
+ * Changed to use json for serializing.
+
 9.7.2016
  * Added support for sending new input through the server and simplified input parsing in bot.py and letters.py.
 
 16.6.2016
- * Added frontend folder with PHP scripts responsible for displaying the results
+ * Added frontend folder with PHP scripts responsible for displaying the results.
 
 27.2.2016
  * Letter files are now html-encoded for prettier outputting in a website. No need to keep track of line breaks anymore.

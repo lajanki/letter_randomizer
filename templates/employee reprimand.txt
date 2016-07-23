@@ -1,0 +1,8 @@
+Dear <span class="receiver first"></span>,
+
+I must inform you that I have received complaints about you from some of the female employees in your office regarding what they have perceived to be sexist remarks and jokes that belittle women. I believe that this is simply a matter of poor judgment on your part; nevertheless, I am sure you understand the seriousness of these complaints.
+
+I would like to meet with you to discuss this matter, so that you may better understand the type of language and humor that others may find offensive. Although I am sure that you did not intend to offend, similar complaints in the future could jeopardize your employment with the Doe Corporation. Please come to my office tomorrow morning at 9:00 a.m. so that we may discuss this matter further.
+
+Regards,  
+<span class="signature"></span>

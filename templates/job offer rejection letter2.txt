@@ -1,0 +1,8 @@
+Dear Mrs. <span class="receiver"></span>,
+
+Thank you for offering me the position of senior software engineer at Camomile Works. After evaluating the offer, considering the team you assembled and the technical and financial opportunity, I turned down other job offers in anticipation of accepting yours. You presented a wonderful opportunity to work with talented people on a project destined to make a great impact on the market. Unfortunately, a sudden change in my family situation makes moving at this time very difficult. Given this reality, I feel I have little choice but to accept a position at Zoe's Entertainment here in Chanswoods.
+
+My commitment here will be for a minimum of six months, so I hope we can keep in touch and perhaps a future opportunity will arise. I will send you my e-mail address as soon as they give me one. Good companies with spectacular opportunities are hard to find. I know I would enjoy working with you.
+
+With best regards,  
+<span class="signature"></span>

@@ -1,0 +1,8 @@
+Dear <span class="receiver"></span> Family,
+
+Welcome to our corner of the world! I hope you will be as happy here as our family has been. My husband, John, and I have three children ages five, seven, and fourteen attending school at Parkfield Elementary and Lincoln High. I have been told your children are about the same ages. John is an investment counselor at Central Bank and is an avid golfer. I love gardening and children.
+
+Our neighborhood is a nice mixture of retired people, active working men and women, and young families. If I can help you find your way around Springfield, please call me at 555-5555. I would be happy to introduce you to our doctor, dentist, bank, or help with any other need you might have. Also, Parkfield Elementary School is having an ice cream social this Friday at 6:00 p.m. We would like you to come with us to the social. It would give our families an opportunity to get better acquainted, and you could meet the teachers. Please let me know if you can go with us.
+
+Looking forward to meeting you,  
+<span class="signature">Jessica Cenadoza</span>

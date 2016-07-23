@@ -1,0 +1,12 @@
+Dear <span class="receiver"></span>, 
+
+I am sorry I was unable to warn you in time that yesterday's meeting had been canceled.
+
+I know it is frustrating to make the drive across town to the main office only to find that your time has been wasted. Because the announcement was made when I was away, I was unable to notify you of the change.
+
+To prevent this situation from occurring again, I have designated Jane as my backup and made her privy to all information sent to me when I am out of the office.
+
+I don't anticipate this happening again and I apologize for the inconvenience. I will also see to it that you are reimbursed for your mileage.
+
+Reagrds,  
+<span class="signature"></span>

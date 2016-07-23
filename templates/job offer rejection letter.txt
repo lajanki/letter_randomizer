@@ -1,4 +1,4 @@
-Dear Ms. Jones:
+Dear Ms. <span class="receiver"></span>:
 
 Thank you for offering me the position of Financial Analyst with Gleeman Sachs. I appreciate your willingness to discuss the details of the position with me and give me time to consider your offer. It was a difficult decision to make; however, I have accepted a position with another company.
 
@@ -6,6 +6,6 @@ You have a great organization and many aspects of the position are very appealin
 
 Thanks again for taking the time to consider my candidacy. It was a pleasure meeting you and your staff.
 
-Sincerely,
-Donte Williams
+Sincerely,  
+<span class="signature></span>
 

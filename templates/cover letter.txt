@@ -1,0 +1,10 @@
+Dear Mr. <span class="receiver"></span>
+
+In response to your employment listing in the Sunday Times, I am writing today to submit my resume in application for the position of Senior Market Analyst.
+
+As my resume demonstrates, my previous work experiences have enabled me to gain a deep and diverse understanding of the mindset and skills needed to succeed as a Senior Market Analyst. These experiences, combined with my ability to adapt to a wide variety of circumstances and to manage many responsibilities while nurturing necessary lines of communication with others, make me a very suitable candidate for your open position.
+
+If this possibility interests you, I would welcome the opportunity to discuss the matter further. Please feel free to contact me at any time; I am available for a phone conversation or office visit most days during the week. Thank you very much for your time and consideration.
+
+Sincerely,  
+<span class="signature"></span>

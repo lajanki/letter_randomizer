@@ -1,0 +1,12 @@
+Dear Mr. <span class="receiver"></span>
+
+I understand how upset you must have been when you discovered that our shipping office sent you the wrong order three days before your sale. Please accept my sincere apologies for that error.
+
+After investigating what caused the mistake, I found that we have two H. Hamokin in our customer files; hence, the shipping office mistakenly sent you the other Mr. H. Hamokin's order. To ensure that we do not repeat this error, we will always include full first names on all paperwork and double check the account numbers.
+
+Again, I apologize for the inconvenience we caused you. We will give a 15% discount on your next order.
+
+Reagrds,  
+<span class="signature"></span>  
+Department Manager  
+HNACK & Friends

@@ -1,4 +1,4 @@
-Dear Mr. Rades:
+Dear Mr. <span class="receiver"></span>:
 
 It is with great enthusiasm that I accept the Program Coordinator position with the Boys and Girls Club of Green Bay. I thoroughly reviewed the details of the position in the letter of employment I received. I look forward to beginning the position and the opportunity to work with young adults through the After-School Program.
 
@@ -6,5 +6,5 @@ As we discussed, my starting salary will be $23,000 with the full range of benef
 
 I will await further correspondence from your office and the employment contract. In the meantime, if you need any additional information, please feel free to contact me any time. I look forward to beginning the program and meeting my fellow colleagues.
 
-Sincerely,
-Janet C. Smith
+Sincerely,  
+<span class="signature"></span>

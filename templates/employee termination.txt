@@ -1,0 +1,14 @@
+Dear Mr. <span class="receiver"></span>,
+
+As you and I have already discussed, your receipt of this letter represents your official dismissal as an employee of SmollPie Pharmaceutics, effective today. A company such as ours has an obligation to adhere to the most exacting standards of scientific integrity. Since you have demonstrated a willingness to compromise these standards, we cannot in good faith accede to your continued employment with us.
+
+Realizing the delicate nature of this situation, I nevertheless need to inform you that SmollPie will maintain a confidential file detailing the events that have led to your dismissal. This file documents your manipulation of research findings with the aim of a personal shortcut to advancement within the company. While we will not attempt to hinder your future career in any way, protection of SmollPie's legal interests and sound reputation requires us to preserve an internal record of all your actions relative to project no. 4013.
+
+It is also appropriate for me to inform you that we cannot recommend you to potential future employers upon their inquiry. For this reason we ask you not to present our company's name or the names of company personnel as references. Please contact my secretary for further information concerning your severance.
+
+In spite of your unfortunate false start here at SmollPie, and because we recognize your very real talent, we genuinely hope you find a bright new beginning for your career.
+
+Sincerely,  
+<span class="signature"></span>  
+Head of Personnel  
+SmollPie Pharmaceutics

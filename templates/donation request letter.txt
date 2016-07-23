@@ -1,4 +1,4 @@
-Dear Mrs. Gerunke
+Dear Mrs. <span class="receiver"></span>,
 
 I am writing to ask for your support for a truly special event I will be participating in on December 1, 2012. I am braving the cold to join TriCity Family Services at their Snowflake Shuffle!
 
@@ -14,7 +14,7 @@ With your help, I know we can make a difference for the thousands of children, f
 
 Thanks for your generosity. I hope I can count on you.
 
-Sincerely,
-Emo Rylo
+Sincerely,  
+<span class="signature"></span>
 
 
