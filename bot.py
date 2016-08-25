@@ -1,59 +1,58 @@
 # -*- coding: utf-8 -*- 
 
-###############################################################################
-# bot.py                                                                      #
-# A Twitter bot using the separate letters module to ask for user input       #
-# on Twitter to randomize a letter template.                                  #
-#                                                                             #
-# This script is set up to make 4 runs per template. On runs 1-3 it checks    #
-# if new input has been tweeted since last run. On 4th run it will read       #
-# all missing input from a database (if any), process the current template    #
-# and tweet a link to it.                                                     #
-#                                                                             #
-# This script is only responsible for the Twitter interaction. The actual     #
-# template processing is handled via the letters module while file upoading   #
-# to server is done by a separate ftp shell script.                           #
-#                                                                             #
-# Requirements:                                                               #
-# * As with letters.py, this script relies on the nltk module to tag user     #
-#   input to word classes in order to not mix different classes.              #
-#   http://www.nltk.org/                                                      #
-# * Twython for interacting with Twitter.                                     #
-#   https://github.com/ryanmcgrath/twython                                    #
-# * Access tokens to Twitter API.                                             #
-#   https://dev.twitter.com/oauth/overview/application-owner-access-tokens    #
-#                                                                             #
-# File structure:                                                             #
-# * This script uses one json file for internal bookkeeping:             		  #
-#    bot_data.json - current state of the bot, a dict of:                     #
-#    * run_order (list): list of files to process                             #
-#    * run (int): the run number the bot is currently.                        #
-#        (runs 1,2,3 = ask for input,                                         #
-#	     4 = check final input and tweet result) 							                  #
-#    * current_title (string): the title of the letter currently being 		    #
-#	   processed                        									                      #
-#    * latest_tweet (string): id of the latest tweet                          #
-#    * processed (boolean): whether the current template is already processed #
-# * Additionally Twitter access tokens are read from keys.json. Note that     #
-#   this file is empty and the actual tokens needs to inserted before         #
-#   the script will run!                                                      # 
-#                                                                             #
-# Change log  																                                #
-# 23.7.2016                                                                   #
-#  -Small code cleanup to accomadete changes in letters.py                    #
-#  -moved get_template_status() to letters.py as it's not directly related    #
-#   to the bot                                                                #    
-# 9.7.2016																	                                  #
-#  -Added support for parsing input from the server 						              #
-#	  (lajanki.mbnet.fi/active.php): parse_input() now gathers user input       #
-#	  Twitter and the server and passes it to letter.parse_input() for 		      #
-#	  actually adding them to template.pkl							                        #
-# 27.5.2016 																                                  #
-#	 -File I/O changed to conform to the changes in letters.py                  #
-# 13.2.2016 																                                  #
-#	 -Initial release 														                              #
-#                                                                             #
-###############################################################################
+"""
+bot.py
+A Twitter bot using the separate letters module to ask for user input
+on Twitter to randomize a letter template.
+
+This script is set up to make 4 runs per template. On runs 1-3 it checks
+if new input has been tweeted since last run. On 4th run it will read
+all missing input from a database (if any), process the current template
+and tweet a link to it.
+
+This script is only responsible for the Twitter interaction. The actual
+template processing is handled via the letters module while file upoading
+to server is done by a separate ftp shell script.
+
+Requirements:
+  * As with letters.py, this script relies on the nltk module to tag user 
+	input to word classes in order to not mix different classes.
+	http://www.nltk.org/
+  * Twython for interacting with Twitter.
+	https://github.com/ryanmcgrath/twython 
+  * Access tokens to Twitter API.
+	https://dev.twitter.com/oauth/overview/application-owner-access-tokens
+
+File structure:
+  * This script uses one json file for internal bookkeeping:
+    bot_data.json - current state of the bot, a dict of:
+	 * run_order (list): list of files to process
+	 * run (int): the run number the bot is currently.
+	   (runs 1,2,3 = ask for input,
+	   4 = check final input and tweet result)
+	 * current_title (string): the title of the letter currently being 
+	   processed
+	 * latest_tweet (string): id of the latest tweet
+	 * processed (boolean): whether the current template is already processed
+  * Additionally Twitter access tokens are read from keys.json. Note that
+	this file is empty and the actual tokens needs to inserted before
+	the script will run! 
+
+Change log
+23.7.2016
+  * Small code cleanup to accomadete changes in letters.py
+  * moved get_template_status() to letters.py as it's not directly related
+	to the bot
+9.7.2016
+  * Added support for parsing input from the server
+	(lajanki.mbnet.fi/active.php): parse_input() now gathers user input
+	from Twitter and the server passing it to letter.parse_input() for
+	actually adding them to template.pkl
+27.5.2016
+  * File I/O changed to conform to the changes in letters.py
+13.2.2016
+  * Initial release
+"""
 
 import nltk
 import json

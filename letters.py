@@ -1,58 +1,62 @@
 # -*- coding: utf-8 -*-
 
-################################################################################
-# letters.py                                                                   #
-# Creates randomized letters by reading a letter template from file,           #
-# parsing it for words to change and filling in new words from user input.     #
-#                                                                              #
-# New words are either fetched from a database or parsed from command line 	   #
-# arguments. 															       #
-#                                                                              #
-# The letter template is tokenized and word tagged by the nltk module to       #
-# determine which words should be changed as well as making sure that the      #
-# right type of word is used to replace old ones (verbs for verbs etc.).       #
-# http://www.nltk.org/                                                         #
-#                                                                              #
-# This script is mostly intended as a library module for bot.py, which uses    #
-# Twitter as a user input source, but can be run directly to generate a        #
-# randomized letter.                                                           #
-#                                                                              #
-# File structure:                                                              #
-# * This script uses a json encoded file for internal bookkeeping.             #
-#	Template data regarding the position and types of words needed is stored   #
-#	in template.json                                                           #
-# * Additionally the script uses:                                              #
-#   1 quotes.db                                                                #
-#     a database with a table of words grouped by their class.                 #
-#   2 templates                                                                #
-#     folder containing letter templates as .txt files                         #
-#   3 template/summary.json                                                    #
-#     file matching each letter file name to a title/description               #
-#																			   #
-# Change log 																   #
-# 23.7.2016  																   #
-#	-Changed letter encoding to markdown for slightly way to add new templates #
-#    and a lot simpler processing in parse_letter() and compose_letter(). 	   #
-#	 The general procedure to processing a template is now: 				   #
-#	   1. Tokenize with nltk,												   #
-#	   2. Transform to html with markdown, 									   #
-#	   3. Parse the html with BeautifulSoup to add receiver and signatures     #
-#   -template.json: instead of storing the whole template, only the actual     #
-#	 change data is stored 													   #
-# 9.7.2016 																	   #
-#	-Parse_input() is now the only access point to inserting new data to       #
-#	 template.pkl throughout letters.py and bot.py. 						   #
-# 27.5.2016  																   #
-#	-Letter files are now html-encoded for prettier outputting in a website.   #
-#	 No need to keep track of line breaks anymore.                             #
-#	-Signatures are now randomly generated using                               #
-#	   http://www.behindthename.com/random/ 	  						       #
-#	-File I/O down to 1 file. User input is now entered directly to template   #
-#	 rather than stored in a buffer. 										   #
-# 13.2.2016  																   #
-# 	-Initial release. 														   #
-#                                                                              #
-################################################################################
+"""
+letters.py
+Creates randomized letters by reading a letter template from file,
+parsing it for words to change and filling in new words from user input.
+
+New words are either fetched from a database or parsed from command line
+arguments.
+
+The letter template is tokenized and word tagged by the nltk module to
+determine which words should be changed as well as making sure that the
+right type of word is used to replace old ones (verbs for verbs etc.).
+http://www.nltk.org/
+
+This script is mostly intended as a library module for bot.py, which uses
+Twitter as a user input source, but can be run directly to generate a
+randomized letter.
+
+File structure:
+* This script uses a json encoded file for internal bookkeeping.
+  Template data regarding the position and types of words needed is stored
+  in template.json
+* Additionally the script uses:
+	1 quotes.db
+	  a database with a table of words grouped by their class.
+	2 templates
+	  folder containing letter templates as .txt files 
+	3 template/summary.json
+	  file matching each letter file name to a title/description
+
+Change log
+23.7.2016 
+* Changed letter encoding to markdown for slightly way to add new templates
+  and a lot simpler processing in parse_letter() and compose_letter().
+  The general procedure to processing a template is now:
+	1. Tokenize with nltk,
+	2. Transform to html with markdown,
+	3. Parse the html with BeautifulSoup to add receiver and signatures
+* Changed serializing method in template.json to json for readability
+* Instead of storing the whole template, store only the words
+  needed to fill the current template
+
+9.7.2016
+* Parse_input() is now the only access point to inserting new data to
+  template.pkl throughout letters.py and bot.py.
+27.5.2016
+* Letter files are now html-encoded for prettier outputting in a website.
+  No need to keep track of line breaks anymore.
+* Signatures are now randomly generated using
+  http://www.behindthename.com/random/
+* File I/O down to 1 file. User input is now entered directly to template
+  rather than stored in a buffer.
+13.2.2016
+* Initial release.
+"""
+
+# TODO: running this module will affect the bot's status via template.json,
+#		add separate status files for letters.py and bot.py?
 
 import requests
 import bs4
@@ -73,7 +77,6 @@ import sqlite3 as lite
 CLASSES = ["JJ", "JJR", "JJS", "NN", "NNS", "RB", "RBR", "VB", "VBN", "VBD", "VBG"]
 rpi_path = "/home/pi/python/letters/"
 
-
 def parse_letter(template, splice_percentage = 0.35):
 	"""Read a markdown encoded letter template from file, randomly select the words to change from each paragraph
 	and store tokenized template and change data to file
@@ -91,7 +94,7 @@ def parse_letter(template, splice_percentage = 0.35):
 
 	# define characters for words that should be ignored when determining valid nltk tags
 	# most of these shouldn't have a valid tag anyway
-	html_items = [ 
+	invalid_tokens = [ 
 		"<",
 		">",
 		"span",
@@ -101,17 +104,23 @@ def parse_letter(template, splice_percentage = 0.35):
 		"receiver",
 		"/",
 		"#",
-		"@"
+		"@",
+		"`",
+		"'"
 	]
 	# tokenize each paragraph to create a frame of words to change
 	change_frame = []
 	for pidx, p in enumerate(text):
-		tokens = nltk.word_tokenize(p)
+		# replace occurances of ' to ` in order to keep nltk from tokenizing contractions
+		# into two (ie. "they're" -> ["they", "'re"]). The former part could then be chosen
+		# for as a valid switch word.
+		#p = p.replace("'", "`")
+		tokens = normalize_tokens(nltk.word_tokenize(p))
 		tagged = nltk.pos_tag(tokens)
 
 		# a list of (paragraph_idx, word_idx, nltk_tag) tuples from words valid words
 		valid = [(pidx, idx, token[1]) for idx, token in enumerate(tagged) if token[1] in CLASSES
-			and not any(item in token[0] for item in html_items) ]
+			and not any(item in token[0] for item in invalid_tokens) ]
 
 		# randomly select splice_precentage% of valid tags
 		n = int(splice_percentage * len(valid))
@@ -126,9 +135,12 @@ def parse_letter(template, splice_percentage = 0.35):
 		fname = os.path.basename(template)
 	try:
 		title = summary[fname]
-	except KeyError as e:  # title not inserted in summary.json
+
+	# title not inserted in summary.json,
+	# use the filename as title
+	except KeyError as e:
 		print e
-		title = ""  
+		title = fname 
 
 	d = {"title":title, "file":template, "change_frame":change_frame, "input":[]}
 	with open(rpi_path+"template.json", "wb") as template_file:
@@ -138,7 +150,7 @@ def parse_letter(template, splice_percentage = 0.35):
 
 
 def parse_input(s, first_only=True):
-	"""Parse input for words needed to fill missing data in template.pkl.
+	"""Parse input for words needed to fill missing data in template.json.
 	Modifies template.json
 	Arg:
 		s (string): text to use as input
@@ -155,7 +167,7 @@ def parse_input(s, first_only=True):
 
 
 	print "Parsing:", s
-	tokens = nltk.word_tokenize(s)
+	tokens = normalize_tokens(nltk.word_tokenize(s))
 	# drop tokens with unwanted characters
 	tokens = [ token for token in tokens if not any(item in token for item in ["//", "html", "@", "http"]) ]
 	# should only the first word be considered?
@@ -197,6 +209,10 @@ def fill_missing():
 		change_frame = template_data["change_frame"]
 		input_ = template_data["input"]
 
+	# Error handling: do nothing if change_frame is already empty
+	if not change_frame:
+		return
+
 	con = lite.connect(rpi_path+"quotes.db")
 	cur = con.cursor()
 	with con: 
@@ -230,7 +246,7 @@ def compose_letter():
 
 	# open the current template, tokenize each paragraph and
 	# insert new words
-	with open(template) as f:
+	with codecs.open(template, encoding="utf8") as f:
 		text = f.read()
 	text = text.split("\n")
 
@@ -243,18 +259,23 @@ def compose_letter():
 		linebreak = False
 		if p.endswith("  "):
 			linebreak = True
-		tokenized = nltk.word_tokenize(p)
-		# get new words belonging to this paragraph
-		new = [ item for item in input_ if item[0] == pidx ]
-		for token in new:
-			tokenized[token[1]] = token[2]
+		tokenized = normalize_tokens(nltk.word_tokenize(p))
+		# get new words belonging to this paragraph,
+		# guard against index error for mismatched paragraph indices
+		try:
+			new = [ item for item in input_ if item[0] == pidx ]
+			for token in new:
+				tokenized[token[1]] = token[2]
 
-		# add back the spaces
-		joined = " ".join(tokenized)
-		if linebreak:
-			joined += "  "
+			# add back the two spaces at the end of the paragraph
+			joined = " ".join(tokenized)
+			if linebreak:
+				joined += "  "
 
-		letter.append(joined)
+			letter.append(joined)
+		except IndexError as e:
+			print e
+			print "current file: ", template
 
 	# join the paragraps together with newlines
 	letter = "\n".join(letter)
@@ -273,10 +294,10 @@ def compose_letter():
 			("$ ", "$"),
 			(" @ ", "@"),
 			("# #", "##"),
-			("< span class= '' receiver '' >", "<span class=\"receiver\">"),
-			("< span class= '' receiver first '' >", "<span class=\"receiver first\">"),
-			("< span class= '' signature '' >", "<span class=\"signature\">"),
-			("< span class= '' signature first '' >", "<span class=\"signature first\">"),
+			("< span class='' receiver'' >", "<span class=\"receiver\">"), # normalize_tokens() will left shift the 's
+			("< span class='' receiver first'' >", "<span class=\"receiver first\">"),
+			("< span class='' signature'' >", "<span class=\"signature\">"),
+			("< span class='' signature first'' >", "<span class=\"signature first\">"),
 			(" < /span >", "</span>"),
 			(" '", "'")
 		]
@@ -318,7 +339,7 @@ def compose_letter():
 	timestamp = timestamp.replace(".", "_")
 	title = title.replace(" ", "_")
 	fname = title + "_" + timestamp + ".txt"
-	with open(fname, "wb") as output:
+	with open(rpi_path+fname, "wb") as output:
 		output.write(letter.encode("utf8"))
 
 
@@ -335,8 +356,31 @@ def randomize_letter():
 #==================================================================================
 # Helper functions =
 #===================
+def normalize_tokens(tokens):
+	"""nltk.word_tokenize() will tokenize words using ' as an apostrophe into
+	two tokens: eg. "can't" -> ["can", "'t"].
+	This function normalizes tokens by reattaching the parts back together.
+	When analyzing the template this prevents the separate parts from being marked as
+	valid tokens.
+	Arg:
+		tokens (list):  a tokenized list of a quote
+	Return:
+		a list of the normalized tokens
+	"""
+	for idx, token in enumerate(tokens):
+		try:
+			if "'" in token:
+				tokens[idx-1] += tokens[idx]
+				tokens[idx] = "DEL"
+		except IndexError as e:
+			print e
+
+	normalized = [token for token in tokens if token != "DEL"]
+	return normalized
+
+
 def show_files():
-	"""Show contents of template.pkl and input.pkl."""
+	"""Show contents of template.json."""
 	with open(rpi_path+"template.json", "rb") as template_file:
 		template_data = json.load(template_file)  
 
@@ -471,10 +515,10 @@ if __name__ == "__main__":
 	parser.add_argument("--parse-input", help="Parse string <input> for words to fill gaps in processed template.", metavar="input")
 	parser.add_argument("--parse-templates", help="""Parse the contents of <template> for database dictionary.
 			<template> should be filename, a string matching to a filename or 'all' for all templates to be parsed.""", metavar="template")
-	parser.add_argument("--show", help="Show contents of input.pkl.", action="store_true")
+	parser.add_argument("--show", help="Show contents of template.json.", action="store_true")
 	args = parser.parse_args()
 
-	if args.init or not os.path.isfile(rpi_path+"template.pkl"):
+	if args.init or not os.path.isfile(rpi_path+"template.json"):
 		print "Initializing..."
 		files = glob.glob(rpi_path+"templates/*.txt")
 		letter = random.choice(files)
