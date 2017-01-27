@@ -1,18 +1,15 @@
 # letter_randomizer
-Creates randomized letters by reading input from Twitter.
+Creates randomized letters by filling templates with user input.
 
 ## Description
 
-A Python script that fills letter templates by reading input from Twitter. The script
-first reads a filled letter from file, randomly selects words to mark as blanks and
-asks for user input on Twitter to fill the blanks. Uses Python's nltk module to keep track of
-which type of word should fill which blank.
+A Python script that generates various types of letters by randomly selecting words to mark as blanks and
+then fill the blanks with words of the same class as the original word. Words are categorized into classes such as verbs, nouns and adjectives using the nltk module.
 
 The script is divided into two modules by functionality:
- * letters.py is in charge of creating and filling the letter template, while
- * bot.py handles Twitter interaction
+ * letters.py is in charge of reading templates and generating randomized letters, while
+ * twitterbot.py handles Twitter interaction and sends the generated file to a dedicated web page at http://lajanki.mbnet.fi/letters/
 
-The bot is set up to perform several input queries per template. The bot's current status as well as the template's current status is stored in Pickle encoded files.
 
 ## Requirements
 
@@ -21,48 +18,58 @@ Python modules:
      http://www.nltk.org/index.html
  * Twython:
      https://twython.readthedocs.org/en/latest/
+ * beautifulsoup:
+     https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
 Keys:
- * You will need to register a Twitter app to get your own Twitter access tokens and developer keys, see https://dev.twitter.com/oauth/overview/application-owner-access-tokens Store these keys to the keys.json file.
+* The Twitterbot needs Twitter access tokens and developer keys in bot-data/keys.json, see
+ https://dev.twitter.com/oauth/overview/application-owner-access-tokens
 
 
 ## Usage
 
-The letters module can be run directly to generate a randomized letter whose missing words are read from a database.
- 1. First, initialize the script with the --init switch. This will choose a random letter from the templates folder, randomize the words to be marked as blanks and store this information to file
- 2. The next 4 calls (by default) will ask for user input and attempt to fill the blanks.
- 3. The 4th call ends with any missing words being read from a database and the template being processed and
- printed on screen. You can also the --fetch-all switch to fetch all missing words from the database at once.
- 
-To use the bot:
-  1. First, fill keys.json with valid Twitter access tokens.
-  2. Initialize the bot with --init switch.
-  3. Subsequent calls to bot.py will then either parse tweets sent to @vocal_applicant (you probably want to change this) for words to use as input to template or, on the 4th call, fill missing words from database and store the result as a .txt file. The bot will also tweet a link to the file, but it is not responsible for sending the file to the server. The launcher script bot.sh will take care of the uploading.
+The letters module can be run directly to generate a randomized letter whose missing words are read from the included database dictionary.db.
+```
+python letters.py --generate
+``` 
+chooses a random template from templates/ parses it into a change_frame.json file in the data/ folder which includes some metadata about the words to change, and finally fetches matching words from the database and produces and output in the data/ directory. The output is an html-tagged .txt file.
+
+It is also possible to manually insert input to be parsed for words filling the blanks. First, parse a random template with
+```
+python letters.py --init
+``` 
+Then, enter input with
+```
+--parse-input input
+``` 
+and the script will insert valid words into a metadata file in data/change_frame.json. The ```--fill-missing``` flag fills any remaining gaps from the database and produces an output file in the data/ folder.
+
+Complete reference:
+``` 
+  -h, --help           show this help message and exit
+  --init               Initialize a random template letter file for
+                       processing. Overwrites previous files in /data.
+  --generate           Generate a random letter.
+  --fill-missing       Fill all missing words with entries from database.
+  --parse-input input  Parse string <input> for words to fill gaps in the
+                       current letter.
+  --show               Show contents of change_frame.json.
+ ``` 
+The bot twitterbot.py works by generating a letter each time its run, uploads it to the web page and tweets a link to it. It also keeps a dynamic index of template files to process in bot-data/bot_status.json.
 
 
-## File structure
-
-Running either of the Python scripts will create several json encoded metadata files for internal bookkeeping:
- * Template data regarding the position and types of words needed is stored in template.pkl
- * The bot's status is stored in bot_status.json, which consists of:
-   * run_order (list): list of files to process
-   * run (int): the run number the bot is currently on
-   * current_title (string): the title of the letter currently being processed
-   * latest_tweet (string): id of the latest tweet
-   * processed (boolean): whether the current template is already processed
-
-Addtionally:
-  * the templates folder contains a collection pre-filled letters and summary json file defining a title for each filename
-  * quotes.db is a database containing a dictionary table which contains words and an nltk tag telling which word class each word belong, see my quote_randomizer for more detailed description https://github.com/lajanki/quote_randomizer
-  * keys.json is an empty storage space for Twitters access tokens, and
-  * bot.sh is a Linux launcher script for running bot.py and for sending any generated output to a web server.
 
 
 
 #### Changelog
+27.1.2017
+* Rewrote letters.py as a class to accommodate the ability to run it without affecting the bot's current state.
+* Rewrote the bot generate finished files on each run.
+* Database behaviour cleanup: added a tagged dataset from the nltk library to the database and removed unrelated tables. Also removed the dependancy to the custom dbaccess module, which was never meant for this project and didn't serve much of a purpose anyway.
+
 23.7.2016
  * Changed letter formatting to markdown. All html parsing is now done by markdown and beautifulsoup.
- * Added a bunch of templates to /templates.
+ * Added a bunch of templates to templates/.
  * Changed to use json for serializing.
 
 9.7.2016
